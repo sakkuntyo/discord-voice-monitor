@@ -2,6 +2,9 @@
 
 Discord のボイスチャンネル参加者と発声状況を、BetterDiscord plugin 経由で Electron ウィンドウに表示する小さなモニターです。
 
+<img width="503" height="504" alt="image" src="https://github.com/user-attachments/assets/e02affc0-8aae-4a2a-9fd5-c2eab1035931" />
+
+
 ## 構成
 
 - `electron/`
