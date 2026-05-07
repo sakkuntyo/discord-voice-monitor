@@ -1,6 +1,6 @@
 /**
  * @name VoiceStateBridge
- * @author Codex
+ * @author sakkuntyo (with Codex)
  * @description Sends current voice participants and speaking state from BetterDiscord to a local Electron app over WebSocket.
  * @version 0.1.0
  * @source https://example.invalid/VoiceStateBridge

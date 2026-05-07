@@ -2,6 +2,7 @@
   "name": "vencord-electron-voice-monitor",
   "version": "0.1.0",
   "private": true,
+  "author": "sakkuntyo (with Codex)",
   "description": "Electron viewer for Vencord voice participants and speaking status",
   "main": "electron/main.js",
   "scripts": {
