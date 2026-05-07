@@ -1,9 +1,15 @@
+const fs = require("node:fs");
 const path = require("node:path");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { WebSocketServer } = require("ws");
 
 const WS_HOST = "127.0.0.1";
 const WS_PORT = 3939;
+const WINDOW_STATE_FILE = "window-state.json";
+const DEFAULT_WINDOW_BOUNDS = {
+  width: 520,
+  height: 720
+};
 
 let mainWindow = null;
 let latestSnapshot = {
@@ -15,16 +21,57 @@ let latestSnapshot = {
   updatedAt: null
 };
 
+function getWindowStatePath() {
+  return path.join(app.getPath("userData"), WINDOW_STATE_FILE);
+}
+
+function readSavedWindowBounds() {
+  try {
+    const raw = fs.readFileSync(getWindowStatePath(), "utf8");
+    const parsed = JSON.parse(raw);
+    const width = Number(parsed?.width);
+    const height = Number(parsed?.height);
+
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+      return DEFAULT_WINDOW_BOUNDS;
+    }
+
+    return {
+      width: Math.max(420, Math.round(width)),
+      height: Math.max(560, Math.round(height))
+    };
+  } catch {
+    return DEFAULT_WINDOW_BOUNDS;
+  }
+}
+
+function saveWindowBounds(window) {
+  if (!window || window.isDestroyed() || window.isMinimized() || window.isMaximized()) return;
+
+  const { width, height } = window.getBounds();
+  const nextState = {
+    width,
+    height
+  };
+
+  try {
+    fs.writeFileSync(getWindowStatePath(), JSON.stringify(nextState, null, 2));
+  } catch (error) {
+    console.error("Failed to save window bounds:", error);
+  }
+}
+
 function broadcastSnapshot() {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("voice-monitor:snapshot", latestSnapshot);
 }
 
 function createWindow() {
+  const savedBounds = readSavedWindowBounds();
   mainWindow = new BrowserWindow({
     title: "Discord Voice Monitor",
-    width: 520,
-    height: 720,
+    width: savedBounds.width,
+    height: savedBounds.height,
     minWidth: 420,
     minHeight: 560,
     autoHideMenuBar: true,
@@ -37,6 +84,9 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.on("resize", () => {
+    saveWindowBounds(mainWindow);
+  });
   mainWindow.on("closed", () => {
     mainWindow = null;
   });

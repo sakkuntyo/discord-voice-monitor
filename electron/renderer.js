@@ -19,6 +19,7 @@ const overlayRingWidthValue = document.getElementById("overlayRingWidthValue");
 const overlayStackSelect = document.getElementById("overlayStackSelect");
 const selfPositionSelect = document.getElementById("selfPositionSelect");
 const nameFontSelect = document.getElementById("nameFontSelect");
+const dadAvatarToggle = document.getElementById("dadAvatarToggle");
 
 const SUMMARY_VISIBILITY_KEY = "voice-monitor:summary-visible";
 const SETTINGS_VISIBILITY_KEY = "voice-monitor:settings-visible";
@@ -31,6 +32,7 @@ const OVERLAY_RING_WIDTH_KEY = "voice-monitor:overlay-ring-width";
 const OVERLAY_STACK_ORDER_KEY = "voice-monitor:overlay-stack-order";
 const SELF_POSITION_KEY = "voice-monitor:self-position";
 const NAME_FONT_KEY = "voice-monitor:name-font";
+const DAD_AVATAR_VISIBLE_KEY = "voice-monitor:dad-avatar-visible";
 
 const TEXT = {
   notReceived: "\u672a\u53d7\u4fe1",
@@ -44,7 +46,9 @@ const TEXT = {
   ringOn: "Ring ON",
   ringOff: "Ring OFF",
   infoOn: "Info ON",
-  infoOff: "Info OFF"
+  infoOff: "Info OFF",
+  avatarOn: "Avatar ON",
+  avatarOff: "Avatar OFF"
 };
 
 const NAME_FONT_OPTIONS = {
@@ -71,7 +75,7 @@ function normalizeHexColor(value) {
 
 function readLayout() {
   const saved = window.localStorage.getItem(LAYOUT_KEY);
-  return saved === "overlay" ? "overlay" : "default";
+  return saved === "overlay" || saved === "dad" ? saved : "default";
 }
 
 function readBackgroundColor() {
@@ -115,6 +119,11 @@ function readNameFont() {
   return Object.hasOwn(NAME_FONT_OPTIONS, saved) ? saved : "ui";
 }
 
+function readDadAvatarVisible() {
+  const saved = window.localStorage.getItem(DAD_AVATAR_VISIBLE_KEY);
+  return saved !== "false";
+}
+
 function applyLayout(layout) {
   document.body.dataset.layout = layout;
   layoutSelect.value = layout;
@@ -123,6 +132,7 @@ function applyLayout(layout) {
 function setLayout(layout) {
   window.localStorage.setItem(LAYOUT_KEY, layout);
   applyLayout(layout);
+  rerenderCurrentSnapshot();
 }
 
 function applyOverlayGap(value) {
@@ -212,6 +222,17 @@ function setNameFont(fontKey) {
   window.localStorage.setItem(NAME_FONT_KEY, normalized);
   applyNameFont(normalized);
   rerenderCurrentSnapshot();
+}
+
+function applyDadAvatarVisible(visible) {
+  document.body.dataset.dadAvatarVisible = visible ? "true" : "false";
+  dadAvatarToggle.textContent = visible ? TEXT.avatarOn : TEXT.avatarOff;
+  dadAvatarToggle.setAttribute("aria-pressed", String(visible));
+}
+
+function setDadAvatarVisible(visible) {
+  window.localStorage.setItem(DAD_AVATAR_VISIBLE_KEY, String(visible));
+  applyDadAvatarVisible(visible);
 }
 
 function applyBackgroundColor(color) {
@@ -335,6 +356,8 @@ function renderMembers(snapshot) {
       const leftOnTop = document.body.dataset.overlayStackOrder === "left-on-top";
       const zIndex = leftOnTop ? stableMembers.length - index : index + 1;
       card.style.zIndex = String(zIndex);
+    } else if (document.body.dataset.layout === "dad") {
+      card.style.zIndex = member.speaking ? "2" : "1";
     } else {
       card.style.zIndex = "";
     }
@@ -388,6 +411,7 @@ async function bootstrap() {
   applyOverlayStackOrder(readOverlayStackOrder());
   applySelfPosition(readSelfPosition());
   applyNameFont(readNameFont());
+  applyDadAvatarVisible(readDadAvatarVisible());
   applySettingsVisibility(readSettingsVisible());
   applySummaryVisibility(readSummaryVisible());
 
@@ -425,6 +449,10 @@ async function bootstrap() {
 
   nameFontSelect.addEventListener("change", event => {
     setNameFont(event.target.value);
+  });
+
+  dadAvatarToggle.addEventListener("click", () => {
+    setDadAvatarVisible(document.body.dataset.dadAvatarVisible !== "true");
   });
 
   settingsToggle.addEventListener("click", () => {

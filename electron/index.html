@@ -30,6 +30,7 @@
               <select id="layoutSelect" class="layout-select">
                 <option value="default">Debug</option>
                 <option value="overlay">Overlay</option>
+                <option value="dad">Dad</option>
               </select>
             </label>
           </div>
@@ -40,7 +41,7 @@
               <input id="backgroundColorInput" class="color-input" type="color" value="#07111f" />
             </label>
           </div>
-          <div class="settings-row overlay-setting">
+          <div class="settings-row overlay-setting dad-shared">
             <span class="settings-label">overlay gap :</span>
             <label class="range-picker">
               <span class="visually-hidden">Overlay gap</span>
@@ -48,7 +49,7 @@
             </label>
             <span id="overlayGapValue" class="settings-value">18px</span>
           </div>
-          <div class="settings-row overlay-setting">
+          <div class="settings-row overlay-setting dad-shared">
             <span class="settings-label">overlay name :</span>
             <button id="overlayNameToggle" class="toggle-button" type="button" aria-pressed="true">
               Name ON
@@ -101,6 +102,12 @@
                 <option value="right">Right</option>
               </select>
             </label>
+          </div>
+          <div class="settings-row dad-setting">
+            <span class="settings-label">user image :</span>
+            <button id="dadAvatarToggle" class="toggle-button" type="button" aria-pressed="true">
+              Avatar ON
+            </button>
           </div>
           <div class="settings-row">
             <span class="settings-label">summary :</span>
