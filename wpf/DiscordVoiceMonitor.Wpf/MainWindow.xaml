@@ -1,0 +1,368 @@
+<Window x:Class="DiscordVoiceMonitor.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:DiscordVoiceMonitor.Wpf.Converters"
+        mc:Ignorable="d"
+        Title="Discord Voice Monitor"
+        Width="720"
+        Height="900"
+        MinWidth="480"
+        MinHeight="640"
+        Background="{Binding BackgroundBrush}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+
+        <Style x:Key="PanelBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="BorderBrush" Value="#2C4568" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="#CC091423" />
+            <Setter Property="Padding" Value="16" />
+        </Style>
+
+        <Style x:Key="PillToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="#DDE8FF" />
+            <Setter Property="Background" Value="#243B59" />
+            <Setter Property="BorderBrush" Value="#4C6990" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Root"
+                                CornerRadius="999"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.95" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#A8C0E8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="18">
+        <StackPanel DockPanel.Dock="Top">
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ToggleButton Grid.Column="1"
+                              Style="{StaticResource PillToggleButtonStyle}"
+                              IsChecked="{Binding SettingsVisible, Mode=TwoWay}"
+                              Content="Settings" />
+            </Grid>
+
+            <TextBlock Margin="0,0,0,14"
+                       HorizontalAlignment="Right"
+                       Foreground="#DDE8FF"
+                       FontSize="28"
+                       Text="{Binding UpdatedAtLabel}" />
+
+            <TextBlock Margin="0,0,0,12"
+                       Foreground="#B8CBE8"
+                       FontSize="15"
+                       Text="{Binding EmptyStateText}"
+                       Visibility="{Binding HasMembers, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+
+            <Border Style="{StaticResource PanelBorderStyle}"
+                    Visibility="{Binding IsDebugLayout, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ItemsControl ItemsSource="{Binding Members}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="{Binding ItemMargin}"
+                                    Padding="14"
+                                    CornerRadius="16"
+                                    BorderBrush="#29405E"
+                                    BorderThickness="1"
+                                    Background="#E6101927">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Width="52"
+                                            Height="52"
+                                            CornerRadius="14"
+                                            Background="#132138"
+                                            BorderBrush="#49668E"
+                                            BorderThickness="1">
+                                        <Image Source="{Binding AvatarUrl}" Stretch="UniformToFill" />
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                                        <TextBlock FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#F5F8FF"
+                                                   FontFamily="{Binding DataContext.MemberNameFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   Text="{Binding DisplayName}" />
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Foreground="#9CB4D8"
+                                                   Text="{Binding DetailLine}"
+                                                   Visibility="{Binding HasDetailLine, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </StackPanel>
+
+                                    <Border Grid.Column="2"
+                                            Padding="10,5"
+                                            CornerRadius="999"
+                                            Background="#22344E">
+                                        <TextBlock Text="{Binding StatusText}"
+                                                   Foreground="#D6E5FF" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled"
+                          Visibility="{Binding IsOverlayLayout, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ItemsControl ItemsSource="{Binding Members}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="{Binding ItemMargin}" Panel.ZIndex="{Binding ZIndex}">
+                                <StackPanel>
+                                    <Grid Width="96" Height="96">
+                                        <Border x:Name="OverlayRing"
+                                                CornerRadius="48"
+                                                BorderBrush="#345A87"
+                                                BorderThickness="6"
+                                                Background="#1A2640">
+                                            <Image Source="{Binding AvatarUrl}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <Ellipse HorizontalAlignment="Right"
+                                                 VerticalAlignment="Bottom"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Fill="#4B5C79"
+                                                 Stroke="#132138"
+                                                 StrokeThickness="3" />
+                                    </Grid>
+                                    <Border Margin="0,8,0,0"
+                                            Padding="10,6"
+                                            HorizontalAlignment="Center"
+                                            CornerRadius="999"
+                                            Background="#F0111720"
+                                            Visibility="{Binding DataContext.NameVisible, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#F3F6FF"
+                                                   FontFamily="{Binding DataContext.MemberNameFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   Text="{Binding DisplayName}" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
+                                    <Setter TargetName="OverlayRing" Property="BorderBrush" Value="#77F0BF" />
+                                    <Setter TargetName="OverlayRing" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="24" ShadowDepth="0" Color="#77F0BF" Opacity="0.65" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled"
+                          Visibility="{Binding IsDadLayout, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ItemsControl ItemsSource="{Binding Members}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="{Binding ItemMargin}" Panel.ZIndex="{Binding ZIndex}">
+                                <StackPanel>
+                                    <Border x:Name="DadFrame"
+                                            Width="82"
+                                            Height="108"
+                                            Padding="4"
+                                            Background="{Binding DataContext.DadFrameFillBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            BorderBrush="#D5B764"
+                                            BorderThickness="2">
+                                        <Image Source="{Binding AvatarUrl}"
+                                               Stretch="UniformToFill"
+                                               Visibility="{Binding DataContext.DadAvatarVisible, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </Border>
+                                    <Border Margin="0,8,0,0"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Center"
+                                            Background="#F0181208"
+                                            BorderBrush="#76694C"
+                                            BorderThickness="1"
+                                            Visibility="{Binding DataContext.NameVisible, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#F2ECD9"
+                                                   FontFamily="{Binding DataContext.MemberNameFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   Text="{Binding DisplayName}" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSpeaking}" Value="True">
+                                    <Setter TargetName="DadFrame" Property="BorderBrush" Value="#FFE36A" />
+                                    <Setter TargetName="DadFrame" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="28" ShadowDepth="0" Color="#FFE36A" Opacity="0.82" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Margin="0,16,0,0"
+                      Visibility="{Binding SettingsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Style="{StaticResource PanelBorderStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="layout :" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding LayoutOptions}"
+                                  SelectedItem="{Binding SelectedLayout, Mode=TwoWay}" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="background :" />
+                        <TextBox Grid.Column="1"
+                                 Padding="10,6"
+                                 Text="{Binding BackgroundColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14"
+                          Visibility="{Binding ShowGapSetting, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="60" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="layout gap :" />
+                        <Slider Grid.Column="1"
+                                Minimum="-40"
+                                Maximum="40"
+                                TickFrequency="1"
+                                Value="{Binding ItemGap, Mode=TwoWay}" />
+                        <TextBlock Grid.Column="2"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Right"
+                                   Foreground="#F5F8FF"
+                                   Text="{Binding ItemGap, StringFormat={}{0:F0}px}" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14"
+                          Visibility="{Binding ShowNameSetting, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="name :" />
+                        <CheckBox Grid.Column="1"
+                                  Foreground="#DDE8FF"
+                                  IsChecked="{Binding NameVisible, Mode=TwoWay}"
+                                  Content="Show member name" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="name font :" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding FontOptions}"
+                                  SelectedValue="{Binding SelectedFontKey, Mode=TwoWay}"
+                                  SelectedValuePath="Key"
+                                  DisplayMemberPath="Label" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14"
+                          Visibility="{Binding ShowDadAvatarSetting, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="user image :" />
+                        <CheckBox Grid.Column="1"
+                                  Foreground="#DDE8FF"
+                                  IsChecked="{Binding DadAvatarVisible, Mode=TwoWay}"
+                                  Content="Show avatar image" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SettingsLabelStyle}" Text="summary :" />
+                        <CheckBox Grid.Column="1"
+                                  Foreground="#DDE8FF"
+                                  IsChecked="{Binding SummaryVisible, Mode=TwoWay}"
+                                  Content="Show summary" />
+                    </Grid>
+
+                    <StackPanel Visibility="{Binding SummaryVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Margin="0,8,0,10"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F8FF"
+                                   Text="Summary" />
+                        <TextBlock Foreground="#B5C8EA" Text="{Binding ChannelLabel, StringFormat=connected voice channel : {0}}" />
+                        <TextBlock Margin="0,8,0,0" Foreground="#B5C8EA" Text="{Binding MemberCount, StringFormat=connected members count : {0}}" />
+                        <TextBlock Margin="0,8,0,0" Foreground="#B5C8EA" Text="{Binding SpeakingCount, StringFormat=speaking members count : {0}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

@@ -33,6 +33,7 @@ const OVERLAY_STACK_ORDER_KEY = "voice-monitor:overlay-stack-order";
 const SELF_POSITION_KEY = "voice-monitor:self-position";
 const NAME_FONT_KEY = "voice-monitor:name-font";
 const DAD_AVATAR_VISIBLE_KEY = "voice-monitor:dad-avatar-visible";
+const MEMBER_SEQUENCE_KEY = "voice-monitor:member-sequence";
 
 const TEXT = {
   notReceived: "\u672a\u53d7\u4fe1",
@@ -61,6 +62,7 @@ const NAME_FONT_OPTIONS = {
 
 const memberOrder = new Map();
 let nextMemberOrder = 0;
+let customMemberSequence = readCustomMemberSequence();
 let latestSnapshot = {
   connected: false,
   channel: null,
@@ -68,6 +70,20 @@ let latestSnapshot = {
   members: [],
   updatedAt: null
 };
+
+function readCustomMemberSequence() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(MEMBER_SEQUENCE_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter(id => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCustomMemberSequence(sequence) {
+  customMemberSequence = [...sequence];
+  window.localStorage.setItem(MEMBER_SEQUENCE_KEY, JSON.stringify(customMemberSequence));
+}
 
 function normalizeHexColor(value) {
   return /^#[0-9a-f]{6}$/i.test(value) ? value : "#07111f";
@@ -306,24 +322,72 @@ function getStableMembers(snapshot) {
     }
   }
 
-  const ordered = [...snapshot.members].sort((left, right) => {
+  const stableOrdered = [...snapshot.members].sort((left, right) => {
     return (memberOrder.get(left.id) ?? 0) - (memberOrder.get(right.id) ?? 0);
   });
 
   const selfPosition = document.body.dataset.selfPosition || "natural";
-  if (selfPosition === "natural") return ordered;
+  const selfMember = selfPosition === "natural"
+    ? null
+    : stableOrdered.find(member => member.isSelf) ?? null;
 
-  const selfIndex = ordered.findIndex(member => member.isSelf);
-  if (selfIndex === -1) return ordered;
+  const movableMembers = selfMember
+    ? stableOrdered.filter(member => member.id !== selfMember.id)
+    : stableOrdered;
 
-  const [selfMember] = ordered.splice(selfIndex, 1);
-  if (selfPosition === "left") {
-    ordered.unshift(selfMember);
-  } else {
-    ordered.push(selfMember);
+  const movableIds = new Set(movableMembers.map(member => member.id));
+  const normalizedSequence = customMemberSequence.filter(id => movableIds.has(id));
+
+  for (const member of movableMembers) {
+    if (!normalizedSequence.includes(member.id)) {
+      normalizedSequence.push(member.id);
+    }
   }
 
+  if (normalizedSequence.length !== customMemberSequence.length
+    || normalizedSequence.some((id, index) => id !== customMemberSequence[index])) {
+    writeCustomMemberSequence(normalizedSequence);
+  }
+
+  const ordered = [...movableMembers].sort((left, right) => {
+    return normalizedSequence.indexOf(left.id) - normalizedSequence.indexOf(right.id);
+  });
+
+  if (!selfMember) return ordered;
+  if (selfPosition === "left") ordered.unshift(selfMember);
+  else ordered.push(selfMember);
+
   return ordered;
+}
+
+function moveMember(memberId, direction) {
+  const selfPosition = document.body.dataset.selfPosition || "natural";
+  const currentMembers = getStableMembers(latestSnapshot);
+  const movableMembers = selfPosition === "natural"
+    ? currentMembers
+    : currentMembers.filter(member => !member.isSelf);
+
+  if (selfPosition !== "natural" && currentMembers.some(member => member.id === memberId && member.isSelf)) {
+    return;
+  }
+
+  const currentIds = movableMembers.map(member => member.id);
+  const baseSequence = customMemberSequence.filter(id => currentIds.includes(id));
+  for (const id of currentIds) {
+    if (!baseSequence.includes(id)) {
+      baseSequence.push(id);
+    }
+  }
+
+  const currentIndex = baseSequence.indexOf(memberId);
+  if (currentIndex === -1) return;
+
+  const targetIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= baseSequence.length) return;
+
+  [baseSequence[currentIndex], baseSequence[targetIndex]] = [baseSequence[targetIndex], baseSequence[currentIndex]];
+  writeCustomMemberSequence(baseSequence);
+  rerenderCurrentSnapshot();
 }
 
 function renderMembers(snapshot) {
@@ -347,10 +411,16 @@ function renderMembers(snapshot) {
     const displayName = fragment.querySelector(".display-name");
     const secondaryLine = fragment.querySelector(".secondary-line");
     const statePill = fragment.querySelector(".state-pill");
+    const moveLeftButton = fragment.querySelector(".move-left");
+    const moveRightButton = fragment.querySelector(".move-right");
 
     avatar.src = member.avatarUrl || "https://cdn.discordapp.com/embed/avatars/0.png";
     avatar.alt = `${member.displayName} avatar`;
     displayName.textContent = member.displayName;
+    moveLeftButton.disabled = index === 0;
+    moveRightButton.disabled = index === stableMembers.length - 1;
+    moveLeftButton.addEventListener("click", () => moveMember(member.id, "left"));
+    moveRightButton.addEventListener("click", () => moveMember(member.id, "right"));
 
     if (document.body.dataset.layout === "overlay") {
       const leftOnTop = document.body.dataset.overlayStackOrder === "left-on-top";

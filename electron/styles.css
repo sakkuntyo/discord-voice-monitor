@@ -280,6 +280,7 @@ body[data-layout="dad"] .overlay-setting.dad-shared {
 }
 
 .member-card {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -289,6 +290,37 @@ body[data-layout="dad"] .overlay-setting.dad-shared {
   border: 1px solid var(--line);
   background: var(--panel);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.member-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.member-move-button {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(88, 148, 255, 0.12);
+  color: #b5d2ff;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  transition: background 160ms ease, opacity 160ms ease, border-color 160ms ease;
+}
+
+.member-move-button:hover:not(:disabled) {
+  background: rgba(88, 148, 255, 0.2);
+  border-color: rgba(137, 183, 255, 0.28);
+}
+
+.member-move-button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .member-card.speaking {
@@ -396,7 +428,7 @@ body[data-layout="overlay"] .member-card {
   position: relative;
   width: auto;
   min-height: 0;
-  padding: 0;
+  padding: 36px 0 0;
   grid-template-columns: 1fr;
   justify-items: center;
   align-content: start;
@@ -411,6 +443,14 @@ body[data-layout="overlay"] .member-card {
 
 body[data-layout="overlay"] .member-card + .member-card {
   margin-left: var(--overlay-gap);
+}
+
+body[data-layout="overlay"] .member-actions {
+  position: absolute;
+  top: 0;
+  right: 50%;
+  transform: translateX(50%);
+  order: unset;
 }
 
 body[data-layout="overlay"] .member-card.speaking {
@@ -521,7 +561,7 @@ body[data-layout="dad"] .member-card {
   position: relative;
   width: 112px;
   min-height: 0;
-  padding: 0;
+  padding: 36px 0 0;
   display: grid;
   grid-template-columns: 1fr;
   justify-items: center;
@@ -537,6 +577,14 @@ body[data-layout="dad"] .member-card.speaking {
   transform: none;
   border: none;
   box-shadow: none;
+}
+
+body[data-layout="dad"] .member-actions {
+  position: absolute;
+  top: 0;
+  right: 50%;
+  transform: translateX(50%);
+  order: unset;
 }
 
 body[data-layout="dad"] .avatar-wrap {

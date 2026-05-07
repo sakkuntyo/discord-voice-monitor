@@ -1,5 +1,8 @@
 node_modules/
 .tmp-vencord/
+dist/
+wpf/**/bin/
+wpf/**/obj/
 
 # Logs
 npm-debug.log*
